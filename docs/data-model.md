@@ -1,6 +1,6 @@
-AFTER SALES INTELLIGENCE – PHASE 1 DATA MODEL
+# AFTER SALES INTELLIGENCE – PHASE 1 DATA MODEL
 
-1. SIGNAL
+## 1. SIGNAL
 
 A Signal represents a raw observation that something may be wrong.
 
@@ -27,7 +27,7 @@ Rules:
 - Signals may never be shown to users
 - Signals can be archived but not deleted
 
-2. CASE
+## 2. CASE
 
 A Case represents a normalized issue pattern derived from one or more signals.
 
@@ -55,7 +55,7 @@ Rules:
 - Multiple Signals may map to one Case
 - Cases evolve over time
 
-3. CONTACT
+## 3. CONTACT
 
 A Contact represents a possible channel for after-sales resolution.
 
@@ -80,7 +80,7 @@ Rules:
 - Validation reflects observation, not promise
 - Contacts may expire
 
-4. GUIDANCE
+## 4. GUIDANCE
 
 Guidance is what the user-facing agent presents.
 
@@ -104,13 +104,13 @@ Rules:
 - Guidance must carry confidence labeling
 - Guidance may say “insufficient data”
 
-5. RELATIONSHIPS (SUMMARY)
+## 5. RELATIONSHIPS (SUMMARY)
 
 Signal → Case: many-to-one
 Case → Contact: one-to-many
 Case → Guidance: one-to-many (generated per interaction)
 
-6. PHASE-1 CONSTRAINTS
+## 6. PHASE-1 CONSTRAINTS
 
 - No user entity
 - No authentication
