@@ -1,3 +1,5 @@
+# Status: Alpha 1
+
 # After Sales Intelligence
 
 An early-stage system focused on analyzing and guiding after-sales service issues in the Indian consumer market.
