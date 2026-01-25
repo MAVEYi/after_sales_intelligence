@@ -117,3 +117,11 @@ Case → Guidance: one-to-many (generated per interaction)
 - No write access from frontend
 - No historical metrics
 - No personalization
+
+## 7. DATA STORE MAPPING (PHASE 1)
+
+- Signals are stored in the Investigation Queue (DB-1)
+- Raw evidence and investigation artifacts are stored temporarily in the Evidence Vault (DB-2)
+- Verified Cases and Contacts are stored in the Knowledge Base (DB-3)
+- User context and uploads are stored temporarily in the User Context Store (DB-4)
+- Admin-seeded context may originate from a separate Admin Seed Store (DB-0)

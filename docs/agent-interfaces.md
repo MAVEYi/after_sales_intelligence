@@ -9,6 +9,12 @@
 - Agents do not modify confidence arbitrarily
 - Agents must return structured output
 
+## AGENT 0: SIGNAL INTAKE SERVICE (NON-AI)
+
+This service is responsible for ingesting public RSS feeds and normalizing them into signal records. It performs no reasoning, classification, or validation.
+
+This service is not an AI agent.
+
 ## AGENT 1: SIGNAL DISCOVERY & CLASSIFICATION
 
 Trigger:
@@ -21,7 +27,7 @@ Input:
 
 Output:
 
-- Signal records only
+- Investigation candidates (triaged signals)
 
 May write to:
 
@@ -29,7 +35,7 @@ May write to:
 
 May NOT:
 
-- create Cases
+- create finalized Cases
 - create Contacts
 - delete Signals
 - interact with users

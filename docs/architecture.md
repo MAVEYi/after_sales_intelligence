@@ -29,8 +29,9 @@ in the Indian consumer market and guides users toward realistic next steps.
 
 ### 4. AI Layer
 
-- Fast classification tasks
-- Deeper reasoning and validation tasks
+- Fast signal classification and triage
+- Controlled evidence analysis and validation
+- User-facing reasoning with explicit confidence labeling
 - Strict separation between signal collection and judgment
 
 ## Design Principles

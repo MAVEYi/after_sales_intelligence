@@ -36,8 +36,8 @@ If any implementation violates these rules, it is incorrect even if it functions
 ## 3. HIGH-LEVEL RUNTIME FLOW
 
 Signal appears
-→ Signal Agent observes
-→ Classification and confidence assignment
+→ Signal Intake Service observes
+→ Signal Agent classifies
 → Contact Agent enriches and validates
 → Analyst Agent reconciles and normalizes
 → Knowledge Base updated
@@ -48,7 +48,7 @@ No agent communicates directly with users except the User Agent.
 
 ## 4. AGENTS AND RESPONSIBILITIES
 
-AGENT 1 — SIGNAL DISCOVERY AND CLASSIFICATION AGENT
+# AGENT 1 — SIGNAL DISCOVERY AND CLASSIFICATION AGENT
 
 Purpose:
 Detect potential after-sales incidents and decide whether they are worth tracking.
@@ -84,7 +84,7 @@ Failure handling:
 - ambiguous signal → parked, not escalated
 - low volume → monitored silently
 
-AGENT 2 — CONTACT DISCOVERY AND VALIDATION AGENT
+# AGENT 2 — CONTACT DISCOVERY AND VALIDATION AGENT
 
 Purpose:
 Attach actionable but honest contact information to validated issues.
@@ -118,7 +118,14 @@ Important rule:
 The agent never claims a contact “works”.
 It only records observed behavior.
 
-AGENT 3 — ANALYST AND JANITOR AGENT
+Evidence Expansion Constraint:
+
+- Secondary links may be followed only when explicitly approved by the Analyst Agent
+- Maximum traversal depth: 1
+- Maximum secondary links per investigation: 2–3
+- Recursive or open-ended traversal is explicitly disallowed
+
+# AGENT 3 — ANALYST AND JANITOR AGENT
 
 Purpose:
 Prevent system decay and AI hallucination.
@@ -146,7 +153,7 @@ Outputs (stored in Primary Knowledge Base):
 - confidence-tagged guidance blocks
 - historical trails without user identity
 
-AGENT 4 — USER INTERACTION AGENT
+# AGENT 4 — USER INTERACTION AGENT
 
 Purpose:
 Translate system knowledge into human-understandable guidance.

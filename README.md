@@ -12,12 +12,37 @@ The goal is to build a neutral, independent intelligence layer that helps users 
 
 ---
 
+## Product Status
+
+**Current Stage:** Alpha 1 — Architecture & Logic Validation
+
+This project is currently in Alpha 1.
+At this stage, the focus is on validating system design, data flow,
+and intelligence boundaries using deterministic logic.
+
+No public deployment or live link is available yet.
+
+See the full product roadmap here: [ROADMAP.md](./ROADMAP.md)
+
+---
+
 ## Project Status
 
 This repository currently contains the **system skeleton only**.
 
 No production logic, scraping, or AI execution has been implemented yet.
 The focus at this stage is on **architecture, boundaries, and scalability**.
+
+---
+
+## Design Rationale
+
+This system intentionally avoids uncontrolled web crawling or scraping.
+Public RSS feeds are used as trusted signals, and AI is applied only for
+classification, evidence analysis, and user guidance.
+
+This approach prioritizes auditability, reduces hallucination risk,
+and avoids legal and ethical ambiguity.
 
 ---
 
