@@ -9,15 +9,16 @@ type Case = {
   confidence_level: string;
   status: string;
 };
+
 export default async function HomePage() {
   const res = await fetch(
-    "https://after-sales-backend.onrender.com/cases",
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/cases`,
     {
       cache: "no-store",
     }
   );
 
-  const cases = await res.json();
+  const cases: Case[] = await res.json();
 
   return (
     <main style={{ padding: "2rem" }}>
@@ -25,7 +26,7 @@ export default async function HomePage() {
       <p>Verified consumer after-sales issues (read-only)</p>
 
       <ul>
-        {cases.map((c: Case) => (
+        {cases.map((c) => (
           <div key={c.id}>
             <strong>{c.brand_name}</strong> — {c.product_category}
             <br />
