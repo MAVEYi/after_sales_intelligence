@@ -1,112 +1,128 @@
-# Status: Alpha 1
+# ConsuMaarg
 
-# After Sales Intelligence
+**After-Sales Intelligence for Indian Consumers**
 
-An early-stage system focused on analyzing and guiding after-sales service issues in the Indian consumer market.
+ConsuMaarg is an independent intelligence system designed to help consumers navigate after-sales service issues in the Indian market.
 
-This project explores how fragmented warranties, unreliable service centers, and inconsistent seller responsibility affect consumers after the purchase window closes.
+It focuses on the most difficult part of the consumer journey: **what happens after the purchase is complete**, when warranties are unclear, service centers are unreliable, and responsibility becomes fragmented across brands, sellers, and third-party providers.
 
-The goal is to build a neutral, independent intelligence layer that helps users understand:
-
-- What kind of after-sales issue they are facing
-- What options realistically exist based on brand and location
-- What next steps are most likely to work
+ConsuMaarg does not replace official support.  
+It provides **clarity, structure, and realistic guidance** when official systems fall short.
 
 ---
 
-## Product Status
+## Why ConsuMaarg Exists
 
-**Current Stage:** Alpha 1 — Architecture & Logic Validation
+After-sales service in India often suffers from:
 
-This project is currently in Alpha 1.
-At this stage, the focus is on validating system design, data flow,
-and intelligence boundaries using deterministic logic.
+- Fragmented warranty policies
+- Inconsistent service center quality
+- Limited transparency on escalation paths
+- Mismatched expectations between consumers and brands
 
-No public deployment or live link is available yet.
+Most consumers are left asking:
 
-See the full product roadmap here: [ROADMAP.md](./ROADMAP.md)
+- _What kind of issue am I actually facing?_
+- _Who is realistically responsible at this point?_
+- _What actions are likely to work, given my location and brand?_
 
----
-
-## Project Status
-
-This repository currently contains the **system skeleton only**.
-
-No production logic, scraping, or AI execution has been implemented yet.
-The focus at this stage is on **architecture, boundaries, and scalability**.
+ConsuMaarg is built to answer those questions objectively.
 
 ---
 
-## Design Rationale
+## What ConsuMaarg Does
 
-This system intentionally avoids uncontrolled web crawling or scraping.
-Public RSS feeds are used as trusted signals, and AI is applied only for
-classification, evidence analysis, and user guidance.
+ConsuMaarg acts as a **neutral intelligence layer** that helps users:
 
-This approach prioritizes auditability, reduces hallucination risk,
-and avoids legal and ethical ambiguity.
+- Identify and classify after-sales issues
+- Understand realistic options based on brand, product, and location
+- Evaluate service channels and escalation paths
+- Decide next steps with clearer expectations
 
----
-
-## High-Level Architecture
-
-The system is designed as a **single backend service** with modular internal components, and a separate frontend application.
-
-### Frontend (`/frontend`)
-
-- User-facing web application
-- Responsible for input collection and output presentation
-- Will communicate with backend via APIs
-- Planned to be deployed on Vercel
-
-### Backend (`/backend`)
-
-- Core intelligence layer
-- Responsible for data ingestion, validation, and reasoning
-- Designed to host multiple internal AI agents
-- Planned to be deployed as a single service on Render
+The system emphasizes **evidence, boundaries, and probability**, not promises.
 
 ---
 
-## Agent-Based Design (Conceptual)
+## Design Philosophy
 
-The backend is planned around internal agents with distinct responsibilities:
+ConsuMaarg is built with a deliberately conservative design philosophy:
 
-- **Signal Agent**  
-  Detects and classifies public after-sales incidents and complaints
+- No uncontrolled web crawling
+- No opaque or unexplainable automation
+- Clear separation between data, reasoning, and guidance
+- Preference for auditability over speed
+- Explicit handling of uncertainty
 
-- **Contact Intelligence Agent**  
-  Collects and validates official and alternative service contacts
-
-- **Analyst / Maintenance Agent**  
-  Deduplicates data, assigns confidence levels, and maintains data quality
-
-- **User Guidance Agent**  
-  Translates user input into structured context and suggests next steps
-
-These agents are conceptual at this stage and not yet implemented.
+The goal is **trustworthy guidance**, not aggressive automation.
 
 ---
 
-## What This Is (and Is Not)
+## High-Level System Overview
 
-This project is:
+ConsuMaarg is designed as a modular system with clear responsibility boundaries.
 
-- A portfolio-grade system design and implementation
-- Focused on real-world consumer pain points
-- Built incrementally with transparency
+### User Interface
 
-This project is **not**:
+- Web-based interface for user input and guidance
+- Focused on clarity, not volume
+- Designed to present structured options rather than generic advice
 
-- A finished consumer product
+### Core Intelligence Layer
+
+- Central service responsible for:
+  - interpreting user context
+  - analyzing available signals
+  - producing structured guidance
+- Built to support multiple internal reasoning components with distinct roles
+
+The system is intentionally incremental and extensible.
+
+---
+
+## What This Project Is — and Is Not
+
+**ConsuMaarg is:**
+
+- An independent consumer-focused intelligence system
+- Built around real, observable after-sales problems
+- Designed with safety, legality, and realism in mind
+- Developed transparently and iteratively
+
+**ConsuMaarg is not:**
+
 - A legal advisory service
 - A replacement for official brand support
+- A guarantee of resolution
+- A scraping-based or exploitative system
 
 ---
 
-## Next Steps
+## Project Maturity
 
-- Initialize frontend application structure
-- Define backend API contracts
-- Introduce basic non-production endpoints
-- Add environment configuration templates
+This repository represents an **early but structured stage** of the product.
+
+- Core system foundations are established
+- End-to-end data flow and boundaries are validated
+- User-facing features are intentionally limited and evolving
+
+There is **no public production deployment** at this time.
+
+For planned milestones and direction, see:  
+[ROADMAP.md](./ROADMAP.md)
+
+---
+
+## Looking Ahead
+
+Upcoming work focuses on:
+
+- Refining user interaction flows
+- Expanding structured guidance capabilities
+- Introducing controlled intelligence components
+- Improving clarity around limitations and expectations
+
+ConsuMaarg is built to grow carefully — not quickly.
+
+---
+
+_ConsuMaarg aims to make after-sales decisions clearer, not easier — because clarity is what consumers lack most._

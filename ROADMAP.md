@@ -1,123 +1,143 @@
-# Product Roadmap – After Sales Service Intelligence Initiative
+# Product Roadmap — ConsuMaarg
 
-This document describes the staged evolution of the product from a
-logic-first MVP to a potential live service.
+_After-Sales Service Intelligence_
 
-The roadmap is intentionally incremental to reduce risk, control scope,
-and ensure the system remains explainable and auditable at each stage.
+This roadmap outlines the structured evolution of ConsuMaarg from a
+logic-first foundation to a potential live service.
+
+Progress is intentionally incremental to:
+
+- control scope,
+- reduce risk,
+- preserve explainability,
+- and maintain auditability at every stage.
+
+Each phase defines **what the system establishes**, not promises of outcomes.
 
 ---
 
-## Alpha 1 — Architecture & Logic Validation (Current)
+## Alpha 1 — Architecture & Logic Validation
 
-**Status:** In Progress  
-**Primary Goal:** Validate end-to-end system design without AI dependency.
+**Focus:** System viability and boundary correctness  
+**Intent:** Establish a reliable foundation without AI dependency
 
 ### Scope
 
-- Full backend + database + frontend pipeline operational
-- Rule-based logic simulating analyst and user-facing intelligence
-- Seeded / dummy data to validate:
+- Complete backend, database, and frontend pipeline
+- Deterministic, rule-based logic simulating analysis and user guidance
+- Seeded and dummy data to validate:
   - signal intake
   - investigation flow
-  - case packaging
+  - case structuring
   - user query resolution
 - No external users
-- No login
-- No AI agents yet
+- No authentication
+- No autonomous agents
 
-### What This Stage Proves
+### What This Phase Establishes
 
-- The system architecture is sound
-- Data flows correctly across layers
-- There are no blind spots in agent boundaries
-- The product can function deterministically
+- The system architecture is internally consistent
+- Data flows correctly across all layers
+- Responsibility boundaries are well defined
+- The product operates deterministically end-to-end
 
-### Excluded
+### Explicitly Excluded
 
 - Automated web intelligence
-- Live RSS ingestion
-- AI reasoning
-- UX polish
+- Live signal ingestion
+- AI-driven reasoning
+- UX or visual polish
 
 ---
 
-## Alpha 2 — AI-Enabled Early Public
+## Alpha 2 — AI-Enabled Early Public Access
 
-**Status:** Planned  
-**Primary Goal:** Validate usefulness with real users.
+**Focus:** Practical usefulness with real-world inputs  
+**Intent:** Evaluate whether the system provides meaningful guidance
 
 ### Scope
 
-- AI agents enabled (Gemini + Jina tools)
-- RSS-based signal intake activated
-- Real investigation and case creation
+- Controlled AI-assisted reasoning enabled
+- Trusted, non-scraped signal sources activated
+- Real case creation and investigation
 - Public access without login
-- Feedback collection from early users
+- Lightweight feedback collection
 
-### Success Criteria
+### Success Signals
 
-- Users can resolve real after-sales issues
-- Guidance is understandable and relevant
-- AI does not hallucinate critical facts
+- Users can progress real after-sales issues
+- Guidance is understandable and context-aware
+- AI behavior remains bounded and non-hallucinatory
+- Limitations are clear to users
 
 ---
 
 ## Alpha 3 — Stability & Signal Validation
 
-**Status:** Planned  
-**Primary Goal:** Decide whether continued development is justified.
+**Focus:** Confidence and consistency  
+**Intent:** Determine long-term viability
 
 ### Scope
 
-- Prompt refinement
-- Confidence scoring
-- Basic usage analytics
-- Performance and reliability improvements
+- Prompt and reasoning refinement
+- Confidence and reliability indicators
+- Basic usage observation
+- Performance and stability improvements
 
-### Outcome
+### Decision Gate
 
-- Go / No-Go decision for Beta phase
+- Continue toward Beta
+- or conclude development at Alpha maturity
 
 ---
 
-## Beta 1 — UX & Value Refinement
+## Beta 1 — Experience & Value Refinement
 
-**Status:** Planned  
-**Primary Goal:** Improve experience and perceived value.
+**Focus:** Usability and perceived value  
+**Intent:** Improve clarity, trust, and flow
 
 ### Scope
 
-- UI/UX polish
-- Flow simplification
+- UI and interaction polish
+- Simplified user journeys
 - Feedback-driven improvements
-- Minor feature additions
+- Selective, low-risk feature additions
 
 ---
 
 ## Beta 2 — Final Staging
 
-**Status:** Planned  
-**Primary Goal:** Prepare for freeze or live continuation.
+**Focus:** Consolidation  
+**Intent:** Decide final disposition of the product
 
 ### Scope
 
-- Automation
+- Automation where justified
 - Documentation finalization
 - Stability hardening
-- Decide:
-  - freeze as portfolio-grade product
-  - or continue as live service
+- Decision point:
+  - freeze as a portfolio-grade system, or
+  - continue toward sustained operation
 
 ---
 
-## Live (Optional)
+## Live (Conditional)
 
-**Status:** Conditional  
-**Primary Goal:** Continuous operation and improvement.
+**Focus:** Ongoing operation  
+**Intent:** Maintain and evolve the system responsibly
 
 ### Scope
 
-- Ongoing maintenance
-- Potential Android wrapper app
-- Same backend and data model
+- Continuous maintenance and refinement
+- Optional platform extensions (e.g., Android wrapper)
+- Shared backend and data model
+
+---
+
+## Roadmap Philosophy
+
+- Each phase is self-contained and auditable
+- Advancement is based on evidence, not timelines
+- Absence of features reflects intentional restraint, not incompleteness
+
+ConsuMaarg advances by **establishing trust before expanding capability**.
