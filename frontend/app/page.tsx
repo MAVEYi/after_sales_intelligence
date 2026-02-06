@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type GuidanceResponse = {
-  investigationId: string;
+  queryId: string;
   guidance: {
     summary: string;
     suggestedSteps: string[];
@@ -11,7 +11,8 @@ type GuidanceResponse = {
       type: string;
       value: string;
       city?: string;
-      description?: string;
+      purpose?: string;
+      priority?: number;
     }>;
     expectations: string;
     legalRights: string;
@@ -29,7 +30,7 @@ export default function HomePage() {
     city: "",
     state: "",
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GuidanceResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +42,8 @@ export default function HomePage() {
     setResult(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
+      const apiUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000";
       const response = await fetch(`${apiUrl}/api/user/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,7 +92,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-semibold mb-6 text-gray-800">
               Describe Your Issue
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
@@ -101,7 +103,9 @@ export default function HomePage() {
                     type="text"
                     required
                     value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, brand: e.target.value })
+                    }
                     placeholder="e.g., Samsung, LG, OnePlus"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
@@ -115,7 +119,9 @@ export default function HomePage() {
                     type="text"
                     required
                     value={formData.product}
-                    onChange={(e) => setFormData({ ...formData, product: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, product: e.target.value })
+                    }
                     placeholder="e.g., Refrigerator, Smartphone"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
@@ -129,7 +135,9 @@ export default function HomePage() {
                 <textarea
                   required
                   value={formData.issue}
-                  onChange={(e) => setFormData({ ...formData, issue: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, issue: e.target.value })
+                  }
                   placeholder="Describe your problem in detail..."
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
@@ -144,7 +152,9 @@ export default function HomePage() {
                   <input
                     type="text"
                     value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, city: e.target.value })
+                    }
                     placeholder="e.g., Mumbai, Delhi"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
@@ -157,7 +167,9 @@ export default function HomePage() {
                   <input
                     type="text"
                     value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, state: e.target.value })
+                    }
                     placeholder="e.g., Maharashtra, Delhi"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
@@ -187,32 +199,43 @@ export default function HomePage() {
             {/* Summary Card */}
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">Your Guidance</h2>
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  Your Guidance
+                </h2>
                 <div className="flex gap-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    result.guidance.severity === "high" || result.guidance.severity === "critical"
-                      ? "bg-red-100 text-red-700"
-                      : result.guidance.severity === "medium"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      result.guidance.severity === "high" ||
+                      result.guidance.severity === "critical"
+                        ? "bg-red-100 text-red-700"
+                        : result.guidance.severity === "medium"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-green-100 text-green-700"
+                    }`}
+                  >
                     {result.guidance.severity.toUpperCase()}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    result.guidance.confidenceLevel === "high"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      result.guidance.confidenceLevel === "high"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
                     {result.guidance.similarCases} Similar Cases
                   </span>
                 </div>
               </div>
-              <p className="text-gray-700 leading-relaxed">{result.guidance.summary}</p>
+              <p className="text-gray-700 leading-relaxed">
+                {result.guidance.summary}
+              </p>
             </div>
 
             {/* Suggested Steps */}
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Suggested Steps</h3>
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                Suggested Steps
+              </h3>
               <ol className="space-y-3">
                 {result.guidance.suggestedSteps.map((step, idx) => (
                   <li key={idx} className="flex items-start">
@@ -226,31 +249,58 @@ export default function HomePage() {
             </div>
 
             {/* Contact Information */}
-            {result.guidance.contacts && result.guidance.contacts.length > 0 && (
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Contact Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {result.guidance.contacts.map((contact, idx) => (
-                    <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="text-sm text-gray-600 mb-1">{contact.description}</div>
-                      <div className="font-medium text-gray-800">{contact.value}</div>
-                      {contact.city && <div className="text-sm text-gray-500 mt-1">{contact.city}</div>}
-                    </div>
-                  ))}
+            {result.guidance.contacts &&
+              result.guidance.contacts.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                    Contact Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {result.guidance.contacts.map((contact, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                      >
+                        <div className="text-sm text-gray-600 mb-1 capitalize">
+                          {contact.type.replace('_', ' ')}
+                        </div>
+                        <div className="font-medium text-gray-800">
+                          {contact.value}
+                        </div>
+                        {contact.purpose && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            For: {contact.purpose.replace('_', ' ')}
+                          </div>
+                        )}
+                        {contact.city && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            📍 {contact.city}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Expectations & Rights */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">What to Expect</h3>
-                <p className="text-gray-700 leading-relaxed">{result.guidance.expectations}</p>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  What to Expect
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {result.guidance.expectations}
+                </p>
               </div>
 
               <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">Your Rights</h3>
-                <p className="text-gray-700 leading-relaxed">{result.guidance.legalRights}</p>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                  Your Rights
+                </h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {result.guidance.legalRights}
+                </p>
               </div>
             </div>
 
@@ -269,7 +319,9 @@ export default function HomePage() {
         {/* Footer */}
         <footer className="text-center mt-12 text-gray-500 text-sm">
           <p>ConsuMaarg is an independent intelligence system.</p>
-          <p className="mt-1">Not a replacement for official brand support or legal advice.</p>
+          <p className="mt-1">
+            Not a replacement for official brand support or legal advice.
+          </p>
         </footer>
       </div>
     </main>
