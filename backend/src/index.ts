@@ -1,28 +1,34 @@
 import "dotenv/config";
 import express from "express";
 import { createClient } from "@supabase/supabase-js";
+import signalRoutes from "./api/signals";
+import userRoutes from "./api/user";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(express.json());
 
-// ---- Supabase client (ADD THIS) ----
-const supabase = createClient(
+// ---- Supabase client ----
+export const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_ANON_KEY!
 );
 
-// ---- Existing routes (KEEP) ----
+// ---- API Routes ----
+app.use("/api/signals", signalRoutes);
+app.use("/api/user", userRoutes);
+
+// ---- Existing routes ----
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
 app.get("/", (_req, res) => {
-  res.send("After Sales Intelligence API");
+  res.send("After Sales Intelligence API - Alpha 2");
 });
 
-// ---- NEW route: read-only cases API ----
+// ---- Existing cases API ----
 app.get("/cases", async (_req, res) => {
   const { data, error } = await supabase
     .from("db3_cases")
@@ -36,7 +42,7 @@ app.get("/cases", async (_req, res) => {
   res.json(data);
 });
 
-// ---- Server start (KEEP) ----
+// ---- Server start ----
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
