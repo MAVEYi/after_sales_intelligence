@@ -1,0 +1,15 @@
+# Render.com Configuration
+# Tells Render to build from the backend directory
+
+services:
+  - type: web
+    name: after-sales-backend
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: backend # ✅ Build from backend directory!
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0
