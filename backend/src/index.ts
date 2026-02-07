@@ -15,48 +15,53 @@ const PORT = process.env.PORT || 4000;
 // ============================================
 
 // Security headers (Helmet)
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
     },
-  },
-  hsts: {
-    maxAge: 31536000, // 1 year
-    includeSubDomains: true,
-    preload: true,
-  },
-}));
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
+  }),
+);
 
 // CORS - Restrict to Vercel domains only
 const allowedOrigins = [
-  process.env.FRONTEND_URL_PRODUCTION || 'https://consumaarg.vercel.app',
-  process.env.FRONTEND_URL_DEV || 'https://after-sales-frontend.vercel.app',
-  'http://localhost:3000', // Local dev
-  'http://localhost:4000', // Backend dev/testing
+  process.env.FRONTEND_URL_PRODUCTION || "https://consumaarg.vercel.app",
+  process.env.FRONTEND_URL_DEV || "https://after-sales-frontend.vercel.app",
+  "http://localhost:3000", // Local dev
+  "http://localhost:4000", // Backend dev/testing
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, curl)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        console.log(`[CORS] Rejected origin: ${origin}`);
+        callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 // Rate limiting - Apply to all API routes
-app.use('/api/', generalLimiter);
+app.use("/api/", generalLimiter);
 
 app.use(express.json());
 
@@ -65,7 +70,7 @@ app.use(express.json());
 // NEVER expose this key to frontend!
 export const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 // ---- API Routes ----
