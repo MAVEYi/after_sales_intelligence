@@ -47,7 +47,12 @@ app.use(
       // Allow requests with no origin (mobile apps, Postman, curl)
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
+      // Security: Only allow our own Vercel previews
+      const isOurVercelPreview =
+        origin.endsWith(".vercel.app") &&
+        (origin.includes("after-sales") || origin.includes("consumaarg"));
+
+      if (allowedOrigins.includes(origin) || isOurVercelPreview) {
         callback(null, true);
       } else {
         console.log(`[CORS] Rejected origin: ${origin}`);
