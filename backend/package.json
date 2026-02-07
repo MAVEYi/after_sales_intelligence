@@ -16,8 +16,11 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
     "groq-sdk": "^0.37.0",
-    "rss-parser": "^3.13.0"
+    "helmet": "^8.1.0",
+    "rss-parser": "^3.13.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

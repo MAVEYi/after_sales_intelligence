@@ -1,22 +1,71 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { createClient } from "@supabase/supabase-js";
+import { generalLimiter } from "./middleware/rate-limit";
 import signalRoutes from "./api/signals";
 import userRoutes from "./api/user";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Enable CORS for all origins (can restrict later)
-app.use(cors());
+// ============================================
+// SECURITY MIDDLEWARE
+// ============================================
+
+// Security headers (Helmet)
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+}));
+
+// CORS - Restrict to Vercel domains only
+const allowedOrigins = [
+  process.env.FRONTEND_URL_PRODUCTION || 'https://consumaarg.vercel.app',
+  process.env.FRONTEND_URL_DEV || 'https://after-sales-frontend.vercel.app',
+  'http://localhost:3000', // Local dev
+  'http://localhost:4000', // Backend dev/testing
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`Not allowed by CORS. Origin: ${origin}`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Rate limiting - Apply to all API routes
+app.use('/api/', generalLimiter);
 
 app.use(express.json());
 
 // ---- Supabase client ----
+// Use service role key for backend (bypasses RLS, full access)
+// NEVER expose this key to frontend!
 export const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 // ---- API Routes ----

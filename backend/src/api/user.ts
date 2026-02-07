@@ -1,24 +1,23 @@
 import { Router, Request, Response } from "express";
+import { ZodError } from "zod";
 import { runAgent3 } from "../agents/case-analyzer";
 import { runAgent4 } from "../agents/guidance-generator";
 import { supabase } from "../index";
+import { aiLimiter } from "../middleware/rate-limit";
+import { UserQuerySchema, FeedbackSchema } from "../validators/user-query";
 
 const router = Router();
 
 /**
  * POST /api/user/query
  * Submit a user query and get AI-powered guidance
+ * Rate limited: 20 queries per minute per IP
  */
-router.post("/query", async (req: Request, res: Response) => {
+router.post("/query", aiLimiter, async (req: Request, res: Response) => {
   try {
-    const { brand, product, issue, city, state } = req.body;
-
-    if (!brand || !product || !issue) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required fields: brand, product, issue",
-      });
-    }
+    // Validate input using Zod schema
+    const validatedData = UserQuerySchema.parse(req.body);
+    const { brand, product, issue, city, state } = validatedData;
 
     console.log(`[User Query] ${brand} ${product} - ${city || "N/A"}`);
 
@@ -70,9 +69,25 @@ router.post("/query", async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("[User Query] Error:", error);
+    
+    // Handle validation errors
+    if (error instanceof ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid input data",
+        details: error.issues.map((e: any) => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+    }
+    
+    // Don't leak internal errors in production
     return res.status(500).json({
       success: false,
-      error: error.message || "Failed to process query",
+      error: process.env.NODE_ENV === 'production' 
+        ? "Failed to process query" 
+        : error.message,
     });
   }
 });
