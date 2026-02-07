@@ -1,4 +1,3 @@
-
 import "dotenv/config";
 import Parser from "rss-parser";
 import { supabase } from "../db/client";
@@ -14,7 +13,8 @@ import { supabase } from "../db/client";
 // Configure parser with User-Agent to avoid Reddit 429 errors
 const parser = new Parser({
   headers: {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
   },
 });
 
@@ -52,12 +52,33 @@ const RSS_FEEDS: FeedConfig[] = [
 ];
 
 const RELEVANCE_KEYWORDS = [
-  "scam", "fraud", "fake", "cheat",
-  "service", "warranty", "repair", "defect", "broken",
-  "support", "ticket", "issue", "problem", "complaint",
-  "refund", "charged", "bill", "invoice", "delivery",
-  "customer care", "not working", "fail", "damage",
-  "chimney", "fridge", "ac", "washing machine" // Added common appliance terms
+  "scam",
+  "fraud",
+  "fake",
+  "cheat",
+  "service",
+  "warranty",
+  "repair",
+  "defect",
+  "broken",
+  "support",
+  "ticket",
+  "issue",
+  "problem",
+  "complaint",
+  "refund",
+  "charged",
+  "bill",
+  "invoice",
+  "delivery",
+  "customer care",
+  "not working",
+  "fail",
+  "damage",
+  "chimney",
+  "fridge",
+  "ac",
+  "washing machine", // Added common appliance terms
 ];
 
 /**
@@ -83,7 +104,7 @@ async function fetchRSSFeed(feed: FeedConfig): Promise<RSSSignal[]> {
 
     return signals;
   } catch (error: any) {
-    if (error.code !== 'ECONNREFUSED' && !error.message.includes('429')) {
+    if (error.code !== "ECONNREFUSED" && !error.message.includes("429")) {
       console.error(`[Agent 0] Error fetching ${feed.name}:`, error.message);
     }
     return [];
@@ -95,7 +116,7 @@ async function fetchRSSFeed(feed: FeedConfig): Promise<RSSSignal[]> {
  */
 async function filterDuplicates(signals: RSSSignal[]): Promise<RSSSignal[]> {
   const uniqueSignals: RSSSignal[] = [];
-  const urlsToCheck = signals.map(s => s.sourceUrl).filter(u => !!u);
+  const urlsToCheck = signals.map((s) => s.sourceUrl).filter((u) => !!u);
 
   if (urlsToCheck.length === 0) return [];
 
@@ -106,7 +127,7 @@ async function filterDuplicates(signals: RSSSignal[]): Promise<RSSSignal[]> {
 
   if (error) return [];
 
-  const existingUrls = new Set(existing?.map(r => r.source_url));
+  const existingUrls = new Set(existing?.map((r) => r.source_url));
 
   for (const signal of signals) {
     if (signal.sourceUrl && !existingUrls.has(signal.sourceUrl)) {
@@ -132,7 +153,10 @@ async function storeSignals(signals: RSSSignal[]): Promise<number> {
     status: "pending",
   }));
 
-  const { data, error } = await supabase.from("db1_signal_intake").insert(records).select();
+  const { data, error } = await supabase
+    .from("db1_signal_intake")
+    .insert(records)
+    .select();
 
   if (error) {
     console.error("[Agent 0] Error storing signals:", error);
@@ -143,71 +167,93 @@ async function storeSignals(signals: RSSSignal[]): Promise<number> {
 
 function cleanContent(text: string): string {
   if (!text) return "";
-  return text.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/<[^>]*>?/gm, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function isRelevant(title: string, content: string): boolean {
   const text = (title + " " + content).toLowerCase();
-  return RELEVANCE_KEYWORDS.some(keyword => text.includes(keyword));
+  return RELEVANCE_KEYWORDS.some((keyword) => text.includes(keyword));
 }
 
 /**
  * Process Unsolved User Signals (Loopback)
  */
 async function processUserSignals(): Promise<number> {
-    console.log("[Agent 0] Checking for unsolved user signals...");
+  console.log("[Agent 0] Checking for unsolved user signals...");
 
-    // Fetch pending user signals
-    const { data: userSignals, error } = await supabase
+  // Fetch pending user signals
+  const { data: userSignals, error } = await supabase
+    .from("db4_user_signal")
+    .select("*")
+    .eq("status", "pending")
+    .limit(20);
+
+  if (error) {
+    console.error("[Agent 0] Error fetching user signals:", error);
+    return 0;
+  }
+  if (!userSignals || userSignals.length === 0) {
+    console.log("[Agent 0] No pending user signals found via query.");
+    return 0;
+  }
+
+  console.log(`[Agent 0] Found ${userSignals.length} pending user signals.`);
+
+  let processedCount = 0;
+
+  for (const signal of userSignals) {
+    const content = cleanContent(signal.query_content);
+
+    // Check relevance (Service related?)
+    if (isRelevant(content, "")) {
+      // Promote to db1_signal_intake
+      const { error: insertError } = await supabase
+        .from("db1_signal_intake")
+        .insert({
+          source: "user_query_loopback",
+          source_url: `user-signal-${signal.id}`, // Unique dummy URL
+          title: "User Query Signal",
+          content: content,
+          published_at: new Date().toISOString(),
+          status: "pending",
+        });
+
+      if (!insertError) {
+        // Mark as processed
+        await supabase
+          .from("db4_user_signal")
+          .update({ status: "processed", processed_at: new Date() })
+          .eq("id", signal.id);
+        processedCount++;
+      } else {
+        console.error(
+          `[Agent 0] Failed to promote signal ${signal.id}:`,
+          insertError,
+        );
+      }
+    } else {
+      // Mark as rejected (not relevant)
+      await supabase
         .from("db4_user_signal")
-        .select("*")
-        .eq("status", "pending")
-        .limit(20);
-
-    if (error || !userSignals || userSignals.length === 0) {
-        return 0;
+        .update({ status: "rejected", processed_at: new Date() })
+        .eq("id", signal.id);
+      console.log(`[Agent 0] User signal ${signal.id} rejected (irrelevant).`);
     }
+  }
 
-    console.log(`[Agent 0] Found ${userSignals.length} pending user signals.`);
-
-    let processedCount = 0;
-
-    for (const signal of userSignals) {
-        const content = cleanContent(signal.query_content);
-        
-        // Check relevance (Service related?)
-        if (isRelevant(content, "")) {
-            // Promote to db1_signal_intake
-            const { error: insertError } = await supabase.from("db1_signal_intake").insert({
-               source: "user_query_loopback",
-               source_url: `user-signal-${signal.id}`, // Unique dummy URL
-               title: "User Query Signal",
-               content: content,
-               published_at: new Date().toISOString(),
-               status: "pending" 
-            });
-
-            if (!insertError) {
-                // Mark as processed
-                await supabase.from("db4_user_signal").update({ status: "processed", processed_at: new Date() }).eq("id", signal.id);
-                processedCount++;
-            } else {
-                 console.error(`[Agent 0] Failed to promote signal ${signal.id}:`, insertError);
-            }
-        } else {
-            // Mark as rejected (not relevant)
-            await supabase.from("db4_user_signal").update({ status: "rejected", processed_at: new Date() }).eq("id", signal.id);
-            console.log(`[Agent 0] User signal ${signal.id} rejected (irrelevant).`);
-        }
-    }
-
-    return processedCount;
+  return processedCount;
 }
 
 /**
  * Main Agent 0 function
  */
-export async function runAgent0(): Promise<{ total: number; sources: Record<string, number> }> {
+export async function runAgent0(): Promise<{
+  total: number;
+  sources: Record<string, number>;
+}> {
   console.log("==================================================");
   console.log("[Agent 0] Intake Agent (RSS + User Signals) - STARTING");
   console.log("==================================================");
@@ -218,9 +264,11 @@ export async function runAgent0(): Promise<{ total: number; sources: Record<stri
   // 1. Process User Signals (Loopback) - Priority High
   const userSignalCount = await processUserSignals();
   if (userSignalCount > 0) {
-      results["user_signals"] = userSignalCount;
-      totalNew += userSignalCount;
-      console.log(`[Agent 0] Promoted ${userSignalCount} user signals to pipeline.`);
+    results["user_signals"] = userSignalCount;
+    totalNew += userSignalCount;
+    console.log(
+      `[Agent 0] Promoted ${userSignalCount} user signals to pipeline.`,
+    );
   }
 
   // 2. Process RSS Feeds
@@ -228,12 +276,12 @@ export async function runAgent0(): Promise<{ total: number; sources: Record<stri
     const signals = await fetchRSSFeed(feed);
     if (signals.length > 0) {
       const uniqueSignals = await filterDuplicates(signals);
-      const relevantSignals = uniqueSignals.filter(s => {
-          s.title = cleanContent(s.title);
-          s.content = cleanContent(s.content);
-          return isRelevant(s.title, s.content);
+      const relevantSignals = uniqueSignals.filter((s) => {
+        s.title = cleanContent(s.title);
+        s.content = cleanContent(s.content);
+        return isRelevant(s.title, s.content);
       });
-      
+
       if (relevantSignals.length > 0) {
         const storedCount = await storeSignals(relevantSignals);
         results[feed.id] = storedCount;

@@ -23,8 +23,8 @@ const MODELS = {
     LLM: "llama-3.3-70b-versatile",
   },
   google: {
-    SLM: "gemini-1.5-flash",
-    LLM: "gemini-1.5-pro",
+    SLM: "gemini-1.5-flash-latest",
+    LLM: "gemini-1.5-pro-latest",
   },
 };
 

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from "express";
+import { z } from "zod";
 import { runAgent0 } from "../agents/agent-0-rss-intake";
 import { runAgent1 } from "../agents/agent-1-signal-classifier";
 import { supabase } from "../db/client";
@@ -31,9 +32,13 @@ router.post("/fetch", async (_req: Request, res: Response) => {
  * POST /api/signals/process
  * Trigger Agent 1: Process pending signals
  */
+const ProcessSchema = z.object({
+  batchSize: z.number().min(1).max(100).optional().default(20),
+});
+
 router.post("/process", async (req: Request, res: Response) => {
   try {
-    const { batchSize = 20 } = req.body;
+    const { batchSize } = ProcessSchema.parse(req.body);
     
     const result = await runAgent1(batchSize);
     

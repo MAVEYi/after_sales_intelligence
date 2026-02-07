@@ -8,11 +8,9 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.SUPABASE_URL?.trim() || "";
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
 
-console.log("DEBUG [db/client.ts]: URL:", supabaseUrl);
-console.log("DEBUG [db/client.ts]: Key length:", supabaseKey.length);
-if (supabaseKey.length > 10) {
-  console.log("DEBUG [db/client.ts]: Key start:", supabaseKey.substring(0, 10));
-}
+// Debug logs removed for security
+// console.log("DEBUG [db/client.ts]: URL:", supabaseUrl);
+// console.log("DEBUG [db/client.ts]: Key length:", supabaseKey.length);
 
 if (!supabaseUrl || !supabaseKey) {
   console.error("CRITICAL: Supabase credentials missing (checked in db/client.ts)!");
