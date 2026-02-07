@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { runAgent0 } from "../agents/agent-0-rss-intake";
 import { runAgent1 } from "../agents/agent-1-signal-classifier";
-import { supabase } from "../index";
+import { supabase } from "../db/client";
 
 const router = Router();
 

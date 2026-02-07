@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./db/client";
 import { generalLimiter } from "./middleware/rate-limit";
 import signalRoutes from "./api/signals";
 import userRoutes from "./api/user";
@@ -74,12 +75,8 @@ app.use(express.json());
 // Use service role key for backend (bypasses RLS, full access)
 // NEVER expose this key to frontend!
 // ---- Supabase client ----
-// Use service role key for backend (bypasses RLS, full access)
-// NEVER expose this key to frontend!
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// Moved to db/client.ts to avoid circular dependencies
+// export const supabase = ...
 
 // ---- API Routes ----
 app.use("/api/signals", signalRoutes);

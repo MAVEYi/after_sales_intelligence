@@ -1,12 +1,13 @@
+
 import "dotenv/config";
 import Parser from "rss-parser";
-import { supabase } from "../index";
+import { supabase } from "../db/client";
 
 /**
- * Agent 0: RSS Feed Intake
+ * Agent 0: RSS Feed & User Signal Intake
  *
- * Purpose: Fetch raw signals from RSS feeds (Reddit, News, Complaint Sites)
- * Writes to: db1_signals (raw intake tier)
+ * Purpose: Fetch raw signals from RSS feeds and Unsolved User Queries
+ * Writes to: db1_signal_intake (raw intake tier)
  * LLM Calls: 0 (deterministic logic only)
  */
 
@@ -32,12 +33,11 @@ interface FeedConfig {
 }
 
 // Configuration: List of feeds to monitor
-// In production, this could move to a database table (db0_feeds)
 const RSS_FEEDS: FeedConfig[] = [
   {
-    id: "consumer_complaints_in",
-    name: "ConsumerComplaints.in",
-    url: "http://www.consumercomplaints.in/rss.php",
+    id: "gnews_service_scam",
+    name: "Google News - Service Scams",
+    url: "https://news.google.com/rss/search?q=service+center+scam+India+OR+warranty+denied+India&hl=en-IN&gl=IN&ceid=IN:en",
   },
   {
     id: "reddit_indian_gaming",
@@ -45,25 +45,19 @@ const RSS_FEEDS: FeedConfig[] = [
     url: "https://www.reddit.com/r/IndianGaming/new/.rss",
   },
   {
-    id: "reddit_india_tech",
-    name: "Reddit r/IndiaTech",
-    url: "https://www.reddit.com/r/IndiaTech/new/.rss",
+    id: "consumer_complaints_in",
+    name: "ConsumerComplaints.in",
+    url: "http://www.consumercomplaints.in/rss.php",
   },
-  {
-    id: "reddit_cars_india",
-    name: "Reddit r/CarsIndia",
-    url: "https://www.reddit.com/r/CarsIndia/new/.rss",
-  },
-  {
-    id: "reddit_legal_advice_india",
-    name: "Reddit r/LegalAdviceIndia",
-    url: "https://www.reddit.com/r/LegalAdviceIndia/new/.rss",
-  },
-  {
-    id: "gnews_service_scam",
-    name: "Google News - Service Scams",
-    url: "https://news.google.com/rss/search?q=service+center+scam+India+OR+warranty+denied+India&hl=en-IN&gl=IN&ceid=IN:en",
-  },
+];
+
+const RELEVANCE_KEYWORDS = [
+  "scam", "fraud", "fake", "cheat",
+  "service", "warranty", "repair", "defect", "broken",
+  "support", "ticket", "issue", "problem", "complaint",
+  "refund", "charged", "bill", "invoice", "delivery",
+  "customer care", "not working", "fail", "damage",
+  "chimney", "fridge", "ac", "washing machine" // Added common appliance terms
 ];
 
 /**
@@ -75,9 +69,7 @@ async function fetchRSSFeed(feed: FeedConfig): Promise<RSSSignal[]> {
   try {
     const feedData = await parser.parseURL(feed.url);
 
-    // Basic validation
     if (!feedData.items || feedData.items.length === 0) {
-      console.log(`[Agent 0] No items found in ${feed.name}`);
       return [];
     }
 
@@ -91,9 +83,7 @@ async function fetchRSSFeed(feed: FeedConfig): Promise<RSSSignal[]> {
 
     return signals;
   } catch (error: any) {
-    if (error.code === 'ECONNREFUSED' || error.message.includes('429')) {
-      console.warn(`[Agent 0] Network/Rate limit error for ${feed.name}: ${error.message}`);
-    } else {
+    if (error.code !== 'ECONNREFUSED' && !error.message.includes('429')) {
       console.error(`[Agent 0] Error fetching ${feed.name}:`, error.message);
     }
     return [];
@@ -101,34 +91,25 @@ async function fetchRSSFeed(feed: FeedConfig): Promise<RSSSignal[]> {
 }
 
 /**
- * Check if signal already exists (duplicate detection)
- * Optimized to check batch of URLs if possible, but for now single check is safer
+ * Filter duplicates
  */
 async function filterDuplicates(signals: RSSSignal[]): Promise<RSSSignal[]> {
   const uniqueSignals: RSSSignal[] = [];
-  
-  // Get list of URLs to check
   const urlsToCheck = signals.map(s => s.sourceUrl).filter(u => !!u);
 
   if (urlsToCheck.length === 0) return [];
 
-  // Check db1_signals for these URLs (Batch check)
   const { data: existing, error } = await supabase
-    .from("db1_signals")
+    .from("db1_signal_intake")
     .select("source_url")
     .in("source_url", urlsToCheck);
 
-  if (error) {
-    console.error("[Agent 0] Error checking duplicates:", error);
-    return []; // Fail safe: don't import if we can't check dups
-  }
+  if (error) return [];
 
   const existingUrls = new Set(existing?.map(r => r.source_url));
 
   for (const signal of signals) {
-    if (!signal.sourceUrl) continue;
-    
-    if (!existingUrls.has(signal.sourceUrl)) {
+    if (signal.sourceUrl && !existingUrls.has(signal.sourceUrl)) {
       uniqueSignals.push(signal);
     }
   }
@@ -137,7 +118,7 @@ async function filterDuplicates(signals: RSSSignal[]): Promise<RSSSignal[]> {
 }
 
 /**
- * Store signals in db1_signals table
+ * Store signals in db1_signal_intake
  */
 async function storeSignals(signals: RSSSignal[]): Promise<number> {
   if (signals.length === 0) return 0;
@@ -151,95 +132,120 @@ async function storeSignals(signals: RSSSignal[]): Promise<number> {
     status: "pending",
   }));
 
-  const { data, error } = await supabase.from("db1_signals").insert(records).select();
+  const { data, error } = await supabase.from("db1_signal_intake").insert(records).select();
 
   if (error) {
     console.error("[Agent 0] Error storing signals:", error);
     return 0;
   }
-
   return data.length;
 }
 
-const RELEVANCE_KEYWORDS = [
-  "scam", "fraud", "fake", "cheat",
-  "service", "warranty", "repair", "defect", "broken",
-  "support", "ticket", "issue", "problem", "complaint",
-  "refund", "charged", "bill", "invoice", "delivery",
-  "customer care", "not working", "fail", "damage"
-];
-
-/**
- * Clean signal content (remove HTML, normalize whitespace)
- */
 function cleanContent(text: string): string {
   if (!text) return "";
-  
-  return text
-    .replace(/<[^>]*>?/gm, " ") // Remove HTML tags
-    .replace(/&nbsp;/g, " ")     // Remove non-breaking spaces
-    .replace(/&amp;/g, "&")      // Decode &
-    .replace(/&quot;/g, '"')     // Decode "
-    .replace(/&lt;/g, "<")       // Decode <
-    .replace(/&gt;/g, ">")       // Decode >
-    .replace(/\s+/g, " ")        // Normalize whitespace
-    .trim();
+  return text.replace(/<[^>]*>?/gm, " ").replace(/\s+/g, " ").trim();
 }
 
-/**
- * Check if signal is relevant based on keywords
- */
 function isRelevant(title: string, content: string): boolean {
   const text = (title + " " + content).toLowerCase();
   return RELEVANCE_KEYWORDS.some(keyword => text.includes(keyword));
 }
 
 /**
+ * Process Unsolved User Signals (Loopback)
+ */
+async function processUserSignals(): Promise<number> {
+    console.log("[Agent 0] Checking for unsolved user signals...");
+
+    // Fetch pending user signals
+    const { data: userSignals, error } = await supabase
+        .from("db4_user_signal")
+        .select("*")
+        .eq("status", "pending")
+        .limit(20);
+
+    if (error || !userSignals || userSignals.length === 0) {
+        return 0;
+    }
+
+    console.log(`[Agent 0] Found ${userSignals.length} pending user signals.`);
+
+    let processedCount = 0;
+
+    for (const signal of userSignals) {
+        const content = cleanContent(signal.query_content);
+        
+        // Check relevance (Service related?)
+        if (isRelevant(content, "")) {
+            // Promote to db1_signal_intake
+            const { error: insertError } = await supabase.from("db1_signal_intake").insert({
+               source: "user_query_loopback",
+               source_url: `user-signal-${signal.id}`, // Unique dummy URL
+               title: "User Query Signal",
+               content: content,
+               published_at: new Date().toISOString(),
+               status: "pending" 
+            });
+
+            if (!insertError) {
+                // Mark as processed
+                await supabase.from("db4_user_signal").update({ status: "processed", processed_at: new Date() }).eq("id", signal.id);
+                processedCount++;
+            } else {
+                 console.error(`[Agent 0] Failed to promote signal ${signal.id}:`, insertError);
+            }
+        } else {
+            // Mark as rejected (not relevant)
+            await supabase.from("db4_user_signal").update({ status: "rejected", processed_at: new Date() }).eq("id", signal.id);
+            console.log(`[Agent 0] User signal ${signal.id} rejected (irrelevant).`);
+        }
+    }
+
+    return processedCount;
+}
+
+/**
  * Main Agent 0 function
- * Fetches from all configured RSS sources
  */
 export async function runAgent0(): Promise<{ total: number; sources: Record<string, number> }> {
   console.log("==================================================");
-  console.log("[Agent 0] RSS Feed Intake Agent - STARTING");
+  console.log("[Agent 0] Intake Agent (RSS + User Signals) - STARTING");
   console.log("==================================================");
 
   const results: Record<string, number> = {};
   let totalNew = 0;
 
-  // Process feeds sequentially to be gentle on network/CPU
+  // 1. Process User Signals (Loopback) - Priority High
+  const userSignalCount = await processUserSignals();
+  if (userSignalCount > 0) {
+      results["user_signals"] = userSignalCount;
+      totalNew += userSignalCount;
+      console.log(`[Agent 0] Promoted ${userSignalCount} user signals to pipeline.`);
+  }
+
+  // 2. Process RSS Feeds
   for (const feed of RSS_FEEDS) {
     const signals = await fetchRSSFeed(feed);
-    
     if (signals.length > 0) {
       const uniqueSignals = await filterDuplicates(signals);
-      
-      const relevantSignals: RSSSignal[] = [];
-      
-      for (const signal of uniqueSignals) {
-        // Clean content FIRST
-        signal.title = cleanContent(signal.title);
-        signal.content = cleanContent(signal.content);
-        
-        // Filter SECOND
-        if (isRelevant(signal.title, signal.content)) {
-          relevantSignals.push(signal);
-        }
-      }
+      const relevantSignals = uniqueSignals.filter(s => {
+          s.title = cleanContent(s.title);
+          s.content = cleanContent(s.content);
+          return isRelevant(s.title, s.content);
+      });
       
       if (relevantSignals.length > 0) {
         const storedCount = await storeSignals(relevantSignals);
         results[feed.id] = storedCount;
         totalNew += storedCount;
-        console.log(`[Agent 0] Saved ${storedCount} relevant items from ${feed.name} (filtered ${uniqueSignals.length - relevantSignals.length} irrelevant)`);
-      } else {
-        console.log(`[Agent 0] No relevant items from ${feed.name} (checked ${uniqueSignals.length})`);
+        console.log(`[Agent 0] Saved ${storedCount} items from ${feed.name}`);
       }
     }
   }
 
   console.log("==================================================");
-  console.log("[Agent 0] RSS Feed Intake Agent - COMPLETE");
-  console.log(`[Agent 0] Total new signals collected: ${totalNew}`);
+  console.log("[Agent 0] Intake Agent - COMPLETE");
+  console.log(`[Agent 0] Total new signals: ${totalNew}`);
   console.log("==================================================");
 
   return { total: totalNew, sources: results };

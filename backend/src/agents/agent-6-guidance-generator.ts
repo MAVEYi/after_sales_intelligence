@@ -1,6 +1,7 @@
+
 import "dotenv/config";
-import { supabase } from "../index";
-import { callGroq, parseJSONFromLLM } from "../services/groq";
+import { supabase } from "../db/client";
+import { callLLM, parseJSONFromLLM } from "../services/llm";
 import { rateLimiter, RATE_LIMIT_CONFIGS } from "../services/rate-limiter";
 import type { UserQuery, CasePattern, CaseAnalysis, ContactInfo, Guidance } from "../types/shared";
 
@@ -37,7 +38,7 @@ async function fetchBrandContacts(
   const { data, error } = await query;
 
   if (error) {
-    console.error("[Agent 4] Error fetching contacts:", error);
+    console.error("[Agent 6] Error fetching contacts:", error);
     return [];
   }
 
@@ -110,9 +111,11 @@ Be specific, use actual contact info, cite success rates.`;
   try {
     await rateLimiter.checkAndWait(RATE_LIMIT_CONFIGS.agent_4);
 
-    const response = await callGroq(prompt, systemPrompt, {
-      temperature: 0.4,
-      maxTokens: 2048,
+    // Use LLM Tier (High Quality) for User Guidance
+    const response = await callLLM(prompt, systemPrompt, {
+        tier: "LLM",
+        temperature: 0.4,
+        maxTokens: 2048
     });
 
     const parsed = parseJSONFromLLM(response);
@@ -132,7 +135,7 @@ Be specific, use actual contact info, cite success rates.`;
       severity: analysis.severity,
     };
   } catch (error) {
-    console.error("[Agent 4] Guidance generation failed:", error);
+    console.error("[Agent 6] Guidance generation failed:", error);
 
     // Fallback using pattern data
     return {

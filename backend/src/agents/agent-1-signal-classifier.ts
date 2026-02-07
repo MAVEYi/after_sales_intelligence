@@ -1,14 +1,15 @@
+
 import "dotenv/config";
-import { supabase } from "../index";
-import { callGroq, parseJSONFromLLM } from "../services/groq";
+import { supabase } from "../db/client";
+import { callLLM, parseJSONFromLLM } from "../services/llm";
 import { rateLimiter, RATE_LIMIT_CONFIGS } from "../services/rate-limiter";
 
 /**
  * Agent 1: Signal Classifier
  * 
  * Purpose: Extract structured metadata from raw signals using AI
- * Reads from: db1_signals (status='pending')
- * Writes to: db2_signal_analysis
+ * Reads from: db1_signal_intake (status='pending')
+ * Writes to: db1_verified_signals
  * LLM Calls: 1 call per batch (default 20 signals)
  * 
  * Uses rate limiting to prevent quota exhaustion
@@ -64,8 +65,10 @@ Return a JSON array with same order as input.`;
     // Apply rate limiting before making LLM call
     await rateLimiter.checkAndWait(RATE_LIMIT_CONFIGS.agent_1);
     
-    const response = await callGroq(prompt, systemPrompt, {
-      temperature: 0.2, // Low temp for consistent extraction
+    // Use SLM Tier (Cost Optimized)
+    const response = await callLLM(prompt, systemPrompt, {
+      tier: "SLM",
+      temperature: 0.1, // Low temp for consistent extraction
       maxTokens: 4096,  // Larger output for batch
     });
 
@@ -98,9 +101,9 @@ export async function runAgent1(batchSize: number = 20): Promise<{ processed: nu
   console.log("[Agent 1] Signal Classifier Agent - STARTING");
   console.log("==================================================");
 
-  // Fetch unprocessed signals from db1
+  // Fetch unprocessed signals from db1_signal_intake
   const { data: signals, error } = await supabase
-    .from("db1_signals")
+    .from("db1_signal_intake")
     .select("id, title, content, source")
     .eq("status", "pending")
     .limit(batchSize);
@@ -122,38 +125,38 @@ export async function runAgent1(batchSize: number = 20): Promise<{ processed: nu
     // Classify entire batch with 1 LLM call
     const classifications = await classifySignalBatch(signals);
 
-    // Store results in db2_signal_analysis
-    const analysisRecords = classifications.map((c) => ({
-      source_signal_id: c.id,
-      brand_name: c.brand_name,
-      product_category: c.product_category,
-      issue_type: c.issue_type,
-      sentiment: c.sentiment,
-      contains_contact_info: c.contains_contact_info,
-      confidence_score: c.confidence_score,
-      processed_by: "agent_1",
-      llm_model: "llama-3.1-8b-instant",
-      status: "approved", // Auto-approve for now
+    // Store results in db1_verified_signals
+    const verifiedRecords = classifications.map((c, idx) => ({
+      intake_id: c.id,
+      title: signals[idx].title,
+      content: signals[idx].content,
+      source: signals[idx].source,
+      verification_score: c.confidence_score,
+      verification_reason: `Brand: ${c.brand_name}, Issue: ${c.issue_type}`,
+      brand: c.brand_name,
+      status: "pending", // Ready for Agent 2 & 3
     }));
 
     const { error: insertError } = await supabase
-      .from("db2_signal_analysis")
-      .insert(analysisRecords);
+      .from("db1_verified_signals")
+      .insert(verifiedRecords);
 
     if (insertError) {
-      console.error("[Agent 1] Error storing analysis:", insertError);
+      console.error("[Agent 1] Error storing verified signals:", insertError);
       return { processed: 0, llmCalls: 1 };
     }
 
-    // Update db1_signals status to 'processed'
+    // Delete processed signals from db1_signal_intake (Immediate retention policy)
     const signalIds = signals.map((s) => s.id);
-    const { error: updateError } = await supabase
-      .from("db1_signals")
-      .update({ status: "processed", processed_at: new Date().toISOString() })
+    const { error: deleteError } = await supabase
+      .from("db1_signal_intake")
+      .delete()
       .in("id", signalIds);
 
-    if (updateError) {
-      console.error("[Agent 1] Error updating signal status:", updateError);
+    if (deleteError) {
+      console.error("[Agent 1] Error deleting processed signals:", deleteError);
+    } else {
+      console.log(`[Agent 1] Deleted ${signalIds.length} processed signals from intake.`);
     }
 
     console.log("==================================================");
@@ -169,10 +172,14 @@ export async function runAgent1(batchSize: number = 20): Promise<{ processed: nu
     // Mark signals as failed
     const signalIds = signals.map((s) => s.id);
     await supabase
-      .from("db1_signals")
+      .from("db1_signal_intake") // Fix table name
       .update({ status: "rejected" })
       .in("id", signalIds);
 
     return { processed: 0, llmCalls: 1 }; // LLM was called even if it failed
   }
+}
+
+if (require.main === module) {
+    runAgent1().catch(console.error);
 }
