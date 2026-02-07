@@ -73,6 +73,9 @@ app.use(express.json());
 // ---- Supabase client ----
 // Use service role key for backend (bypasses RLS, full access)
 // NEVER expose this key to frontend!
+// ---- Supabase client ----
+// Use service role key for backend (bypasses RLS, full access)
+// NEVER expose this key to frontend!
 export const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -106,6 +109,9 @@ app.get("/cases", async (_req, res) => {
 });
 
 // ---- Server start ----
-app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
-});
+// Only start server if run directly (not imported)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Backend running on port ${PORT}`);
+  });
+}
