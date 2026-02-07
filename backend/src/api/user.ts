@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { ZodError } from "zod";
-import { runAgent3 } from "../agents/case-analyzer";
-import { runAgent4 } from "../agents/guidance-generator";
+import { runAgent2 } from "../agents/agent-2-case-analyzer";
+import { runAgent6 } from "../agents/agent-6-guidance-generator";
 import { supabase } from "../index";
 import { aiLimiter } from "../middleware/rate-limit";
 import { UserQuerySchema, FeedbackSchema } from "../validators/user-query";
@@ -23,11 +23,11 @@ router.post("/query", aiLimiter, async (req: Request, res: Response) => {
 
     const userQuery = { brand, product, issue, city, state };
 
-    // Run Agent 3: Case Analyzer
-    const analysis = await runAgent3(userQuery);
+    // Run Agent 2: Case Analyzer
+    const analysis = await runAgent2(userQuery);
 
-    // Run Agent 4: Guidance Generator
-    const guidance = await runAgent4(userQuery, analysis);
+    // Run Agent 6: Guidance Generator
+    const guidance = await runAgent6(userQuery, analysis);
 
     // Store in db4_user_queries
     const { data: queryRecord, error: dbError } = await supabase
