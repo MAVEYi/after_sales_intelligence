@@ -21,13 +21,23 @@ export async function runIntakePipeline() {
     console.log("\n--- Step 2: Running Agent 1 (Signal Classification) ---");
     const agent1Result = await runAgent1();
 
-    // Step 3: Run Agents 2 & 3 (Parallel or Sequential)
-    // Running sequentially to avoid rate limits and keep logs clean
-    console.log("\n--- Step 3a: Running Agent 2 (Signal Investigator) ---");
-    await runAgent2();
+    // Step 3: Run Agents 2 & 3 (Sequential Loop)
+    // Looping 3 times to process more backlog items per run
+    const LOOP_ITERATIONS = 3;
+    console.log(`\n--- Step 3: Running Agents 2 & 3 (Loop x${LOOP_ITERATIONS}) ---`);
 
-    console.log("\n--- Step 3b: Running Agent 3 (Contact Hunter) ---");
-    await runAgent3();
+    for (let i = 1; i <= LOOP_ITERATIONS; i++) {
+        console.log(`\n[Loop ${i}/${LOOP_ITERATIONS}] Starting Agent 2 (Signal Investigator)...`);
+        await runAgent2();
+        
+        console.log(`\n[Loop ${i}/${LOOP_ITERATIONS}] Starting Agent 3 (Contact Hunter)...`);
+        await runAgent3();
+
+        if (i < LOOP_ITERATIONS) {
+            console.log(`[Loop ${i}/${LOOP_ITERATIONS}] Cooling down for 2s...`);
+            await new Promise(r => setTimeout(r, 2000));
+        }
+    }
 
     // Step 4: Run Agent 4 (Synthesizer)
     console.log("\n--- Step 4: Running Agent 4 (Data Synthesizer) ---");

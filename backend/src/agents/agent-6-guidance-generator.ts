@@ -111,11 +111,12 @@ Be specific, use actual contact info, cite success rates.`;
   try {
     await rateLimiter.checkAndWait(RATE_LIMIT_CONFIGS.agent_4);
 
-    // Use LLM Tier (High Quality) for User Guidance
+    // Use GUIDANCE Tier (allam-2-7b-13b) for better rate limits while maintaining quality
     const response = await callLLM(prompt, systemPrompt, {
-        tier: "LLM",
+        tier: "GUIDANCE" as any, // Cast to any because we dynamically added the tier
         temperature: 0.4,
-        maxTokens: 2048
+        maxTokens: 2048,
+        provider: "groq" // Force Groq for this model
     });
 
     const parsed = parseJSONFromLLM(response);

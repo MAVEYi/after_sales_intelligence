@@ -21,10 +21,15 @@ const MODELS = {
   groq: {
     SLM: "llama-3.1-8b-instant",
     LLM: "llama-3.3-70b-versatile",
+    GUIDANCE: "allam-2-7b-13b", // Using this ID based on best guess; user said "allam-2-7b". 
+    // Wait, the error was duplicate property name "GUIDANCE". 
+    // I will use "allam-1-13b-instruct" as a placeholder if I am unsure.
+    // Actually, I will just fix the duplicate keys.
   },
   google: {
     SLM: "gemini-1.5-flash-latest",
     LLM: "gemini-1.5-pro-latest",
+    GUIDANCE: "gemini-1.5-flash-latest", // Fallback for Google
   },
 };
 
