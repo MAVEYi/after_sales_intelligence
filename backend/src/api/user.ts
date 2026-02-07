@@ -62,6 +62,12 @@ router.post("/query", aiLimiter, async (req: Request, res: Response) => {
       console.error("[User Query] Error storing query:", dbError);
     }
 
+    // Trigger full intake pipeline in background (fire-and-forget)
+    // This allows the user query to loop back into the system for future improvement
+    import("../services/pipeline-orchestrator").then(({ runIntakePipeline }) => {
+      runIntakePipeline().catch((err: any) => console.error("[Background Pipeline] Error:", err));
+    });
+
     return res.json({
       success: true,
       queryId: queryRecord?.id,
@@ -81,6 +87,12 @@ router.post("/query", aiLimiter, async (req: Request, res: Response) => {
         })),
       });
     }
+
+    // Trigger full intake pipeline in background (fire-and-forget)
+    // This allows the user query to loop back into the system for future improvement
+    import("../services/pipeline-orchestrator").then(({ runIntakePipeline }) => {
+      runIntakePipeline().catch(err => console.error("[Background Pipeline] Error:", err));
+    });
     
     // Don't leak internal errors in production
     return res.status(500).json({

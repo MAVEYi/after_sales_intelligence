@@ -1,21 +1,20 @@
 import "dotenv/config";
-import { runAgent0 } from "../agents/agent-0-rss-intake";
-import { supabase } from "../db/client";
+import { runIntakePipeline } from "../services/pipeline-orchestrator";
 
 /**
- * Script to run Agent 0 (RSS & User Signal Intake) standalone.
+ * Script to run the Intake Pipeline (Agent 0 + Agent 1).
  * This is designed to be run by a cron job (e.g., GitHub Actions).
  */
 async function main() {
-  console.log("Starting Agent 0 via script...");
+  console.log("Starting Intake Pipeline via script...");
   
   try {
-    const result = await runAgent0();
-    console.log("Agent 0 execution finished successfully.");
+    const result = await runIntakePipeline();
+    console.log("Pipeline execution finished successfully.");
     console.log("Result:", JSON.stringify(result, null, 2));
     process.exit(0);
   } catch (error) {
-    console.error("Error running Agent 0:", error);
+    console.error("Error running pipeline:", error);
     process.exit(1);
   }
 }
